@@ -1,0 +1,62 @@
+// Prisma schema for busca-passagens
+// Dev: SQLite (file:./dev.db). Production (Vercel): point DATABASE_URL at a
+// hosted Postgres (Neon/Supabase/Vercel Postgres) — see README "Deploy" section.
+// Note: SQLite works locally but Vercel's filesystem is ephemeral/read-only per
+// invocation, so alerts/history would not persist in production without Postgres.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Alert {
+  id             String   @id @default(cuid())
+  origin         String // IATA code
+  destination    String // IATA code, or a combinedRouteId (see combinedRoutes.ts)
+  isCombined     Boolean  @default(false)
+  departureDate  String // ISO yyyy-MM-dd, center date of the flex window
+  returnDate     String? // ISO yyyy-MM-dd, null for one-way
+  flexDays       Int      @default(0)
+  adults         Int      @default(1)
+  nearbyAirports Boolean  @default(false)
+  targetPriceBrl Float // notify when the lowest found price drops at/below this
+  email          String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  lastCheckedAt  DateTime?
+  lastBestPrice  Float?
+  notifiedAt     DateTime?
+
+  priceHistory PriceHistory[]
+
+  @@index([active])
+}
+
+model PriceHistory {
+  id            String   @id @default(cuid())
+  alertId       String
+  alert         Alert    @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  checkedAt     DateTime @default(now())
+  bestPriceBrl  Float
+  departureDate String
+  returnDate    String?
+  carrierCode   String?
+  raw           String? // JSON snapshot of the winning offer, for debugging
+
+  @@index([alertId, checkedAt])
+}
+
+// Cache of raw flight-offer search results, keyed by a normalized search
+// signature, to avoid re-hitting Amadeus (or any provider) within the TTL.
+model SearchCache {
+  key       String   @id
+  payload   String // JSON
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
