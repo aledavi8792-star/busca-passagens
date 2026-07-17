@@ -4,7 +4,7 @@ import { toBRL } from "@/lib/currency";
 import { buildBookingLink } from "@/lib/bookingLink";
 import type { AmadeusSearchParams } from "@/lib/amadeus";
 
-// Deterministic mock flight offers, used whenever AMADEUS_CLIENT_ID/SECRET
+// Deterministic mock flight offers, used whenever DUFFEL_ACCESS_TOKEN (or AMADEUS_CLIENT_ID/SECRET)
 // are not configured, so the full search flow (flexible dates, heatmap,
 // combined routes, sorting) can be validated end to end before signing up
 // for a real API key. Every offer this module returns has isMock: true and
@@ -80,7 +80,7 @@ export async function generateMockOffers(params: AmadeusSearchParams): Promise<F
         departureDate: params.departureDate,
         returnDate: params.returnDate,
       }),
-      bookingLinkNote: "Dados simulados (mock) — configure AMADEUS_CLIENT_ID/SECRET para preços reais.",
+      bookingLinkNote: "Dados simulados (mock) — configure DUFFEL_ACCESS_TOKEN para preços reais.",
       isMock: true,
       originRequested: params.origin,
       destinationRequested: params.destination,

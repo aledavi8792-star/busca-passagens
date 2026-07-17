@@ -64,6 +64,28 @@ chegada real e o trecho terrestre necessário:
 Configuração em `src/lib/combinedRoutes.ts` — dá para adicionar outros
 destinos "sem voo direto" seguindo o mesmo padrão.
 
+## Passagens separadas (ida + volta como 2 tickets)
+
+Em toda busca de ida e volta, o app roda em paralelo uma comparação: duas
+passagens só-ida (uma para cada trecho, possivelmente companhias e datas
+diferentes) contra o preço combinado de ida+volta. Quando a soma dos dois
+trechos separados fica mais barata que qualquer pacote de ida-e-volta
+encontrado, ela aparece na lista com o badge **"✂️ 2 passagens separadas"** e
+dois botões de compra (um por trecho) — já que são duas reservas
+independentes. Lógica em `searchSplitOption` (`src/lib/searchFlights.ts`).
+
+## Milhas/pontos (seats.aero, opcional)
+
+Se `SEATS_AERO_API_KEY` estiver configurada (conta em https://seats.aero,
+Partner API), a busca também consulta disponibilidade de assento-prêmio
+(milhas) para a rota e mostra uma seção separada "✨ Opções com milhas" — isso
+é um dado fundamentalmente diferente do preço em dinheiro (vem do inventário
+de programas de fidelidade, não da Amadeus), então é aditivo: sem a chave,
+essa seção simplesmente não aparece e o resto do app funciona normalmente.
+Ver `src/lib/seatsAero.ts` — os parâmetros seguem a documentação pública da
+seats.aero no momento em que foi escrito; confira `developers.seats.aero` se
+o formato de resposta mudar.
+
 ## Datas flexíveis e cache
 
 Com "datas flexíveis" ativado (+/- 1 a 3 dias), o app gera uma matriz de
@@ -86,6 +108,32 @@ dentro da janela.
   gravado — só o email não é enviado (fica logado no console do servidor)
 
 Para testar o cron manualmente: `curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/check-alerts`
+
+## Dicas para comprar mais barato (o que o app automatiza, e o que depende de você)
+
+- **Monitorar > acertar na hora**: a estratégia com maior retorno é o alerta de
+  preço (fase 2) — deixar rodando por 1-2 semanas e comprar no vale, em vez de
+  tentar "adivinhar" o melhor momento numa busca só.
+- **Datas flexíveis fazem mais diferença que horário de compra**: no mock (e
+  na prática) terça/quarta tendem a ser mais baratos que sexta/domingo; o
+  calendário de preços (heatmap) existe pra você enxergar isso de cara.
+- **"Comprar de madrugada" não tem efeito real**: é um mito comum. O que
+  existe de verdade é a companhia reprecificar (subir ou descer) por causa de
+  ocupação do voo e antecedência da compra — não do horário do dia em que você
+  compra.
+- **Antecedência**: geralmente 4-8 semanas antes para voos domésticos e 2-4
+  meses para internacionais tende a pegar as faixas de preço mais baixas;
+  isso já fica visível ao comparar o heatmap de datas mais próximas vs. mais
+  distantes.
+- **Aeroportos próximos e passagens separadas**: ambos já automatizados no
+  app (toggle "aeroportos próximos" e o comparador ida-volta vs. separado).
+- **Milhas**: costuma compensar mais em trechos longos/internacionais ou
+  classe executiva, onde o preço em dinheiro é desproporcional às milhas
+  exigidas — vale comparar a seção "✨ Opções com milhas" quando configurada.
+- **Limpe cookies / use aba anônima** ao comprar no site da companhia: alguns
+  sites de fato sobem preço com base em buscas repetidas no seu navegador
+  (dynamic pricing por sessão) — isso é do lado deles, o app não influencia
+  nisso, mas ajuda a garantir que você está vendo o preço "de primeira busca".
 
 ## Deploy (Vercel)
 
@@ -125,7 +173,8 @@ src/
     currency.ts / format.ts      # conversão e formatação BRL
     cache.ts                     # cache de buscas (SearchCache, com fallback em memória)
     email.ts                     # notificação de queda de preço (Resend)
-  components/                    # SearchForm, ResultsTable, PriceHeatmap, SaveAlertForm
+    seatsAero.ts                  # disponibilidade de milhas (seats.aero, opcional)
+  components/                    # SearchForm, ResultsTable, PriceHeatmap, SaveAlertForm, AwardOptions
 prisma/schema.prisma              # Alert, PriceHistory, SearchCache
 ```
 
@@ -140,3 +189,7 @@ prisma/schema.prisma              # Alert, PriceHistory, SearchCache
   cadastrados em `combinedRoutes.ts` (hoje: Ciudad del Este). Para uma rota
   qualquer sem resultado, o app apenas orienta a tentar datas/aeroportos
   flexíveis.
+- A comparação de passagens separadas usa só a origem/destino principal (não
+  faz fan-out completo por rota combinada); e a integração com seats.aero
+  segue a documentação pública deles no momento em que foi escrita — se a
+  API deles mudar de formato, `src/lib/seatsAero.ts` pode precisar de ajuste.

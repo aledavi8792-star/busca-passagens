@@ -23,6 +23,13 @@ export interface GroundTransferInfo {
   description: string;
 }
 
+export interface SplitLegInfo {
+  bookingLink: string;
+  priceTotal: number;
+  priceCurrency: string;
+  priceBRL: number;
+}
+
 export interface FlightOffer {
   id: string;
   source: "amadeus" | "mock";
@@ -44,6 +51,24 @@ export interface FlightOffer {
   destinationRequested: string;
   originActual: string;
   destinationActual: string;
+  // Two separate one-way tickets (often different carriers/dates) priced
+  // lower than any single round-trip bundle found. See searchSplitOption in
+  // searchFlights.ts.
+  isSplit?: boolean;
+  splitOutboundLeg?: SplitLegInfo;
+  splitInboundLeg?: SplitLegInfo;
+}
+
+export interface AwardOption {
+  program: string; // loyalty program / alliance name, e.g. "Smiles", "LATAM Pass"
+  origin: string;
+  destination: string;
+  date: string;
+  cabin: string; // economy | premium | business | first
+  miles: number;
+  taxesFeesUSD: number;
+  direct: boolean;
+  seatsAvailable: number;
 }
 
 export interface SearchQuery {
@@ -70,4 +95,6 @@ export interface SearchResult {
   usedMockData: boolean;
   warnings: string[];
   combinedRouteNote?: string;
+  awardOptions?: AwardOption[];
+  awardOptionsNote?: string;
 }

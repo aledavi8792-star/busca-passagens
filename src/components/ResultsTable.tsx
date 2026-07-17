@@ -57,8 +57,8 @@ export default function ResultsTable({ result }: { result: SearchResult }) {
     <div className="space-y-4">
       {result.usedMockData && (
         <div className="rounded-lg border border-purple-300 bg-purple-50 px-4 py-2 text-sm text-purple-900 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-200">
-          ⚠️ Exibindo <strong>dados simulados (mock)</strong> — configure <code>AMADEUS_CLIENT_ID</code>/
-          <code>AMADEUS_CLIENT_SECRET</code> no <code>.env</code> para preços reais.
+          ⚠️ Exibindo <strong>dados simulados (mock)</strong> — configure <code>DUFFEL_ACCESS_TOKEN</code> no{" "}
+          <code>.env</code> para preços reais.
         </div>
       )}
 
@@ -128,6 +128,11 @@ function OfferCard({ offer, isBest }: { offer: FlightOffer; isBest: boolean }) {
               MOCK
             </span>
           )}
+          {offer.isSplit && (
+            <span className="ml-2 inline-block rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
+              ✂️ 2 passagens separadas
+            </span>
+          )}
           <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {formatBRL(offer.priceBRL)}
           </p>
@@ -136,26 +141,47 @@ function OfferCard({ offer, isBest }: { offer: FlightOffer; isBest: boolean }) {
           </p>
         </div>
 
-        <div className="flex flex-col items-end gap-1">
-          <a
-            href={offer.bookingLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            Ver oferta
-          </a>
-          {airlineSite && (
+        {offer.isSplit && offer.splitOutboundLeg && offer.splitInboundLeg ? (
+          <div className="flex flex-col items-end gap-1">
             <a
-              href={airlineSite}
+              href={offer.splitOutboundLeg.bookingLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-slate-500 underline dark:text-slate-400"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
             >
-              site da companhia
+              Ver ida ({formatBRL(offer.splitOutboundLeg.priceBRL)})
             </a>
-          )}
-        </div>
+            <a
+              href={offer.splitInboundLeg.bookingLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              Ver volta ({formatBRL(offer.splitInboundLeg.priceBRL)})
+            </a>
+          </div>
+        ) : (
+          <div className="flex flex-col items-end gap-1">
+            <a
+              href={offer.bookingLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Ver oferta
+            </a>
+            {airlineSite && (
+              <a
+                href={airlineSite}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-slate-500 underline dark:text-slate-400"
+              >
+                site da companhia
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
       {offer.combinedRoute && (

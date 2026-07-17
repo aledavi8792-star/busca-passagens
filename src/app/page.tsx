@@ -6,6 +6,7 @@ import SearchForm from "@/components/SearchForm";
 import ResultsTable from "@/components/ResultsTable";
 import PriceHeatmap from "@/components/PriceHeatmap";
 import SaveAlertForm from "@/components/SaveAlertForm";
+import AwardOptions from "@/components/AwardOptions";
 import type { SearchQuery, SearchResult } from "@/types/flight";
 import type { SearchFormPreset } from "@/components/SearchForm";
 
@@ -102,6 +103,7 @@ export default function Home() {
         {result && !loading && (
           <div className="space-y-6">
             <PriceHeatmap heatmap={result.heatmap} />
+            <AwardOptions options={result.awardOptions} note={result.awardOptionsNote} />
             <ResultsTable result={result} />
             {result.offers.length > 0 && (
               <SaveAlertForm
